@@ -50,7 +50,12 @@ function html(obj, indents) {
   }
 
   if ('string' == typeof obj) {
-    return span('string value', '"' + escape(obj) + '"');
+    var urlRegex = require('url-regex');
+    var str = escape(obj);
+    if (urlRegex().test(obj)) {
+      str = '<a href="' + str + '">' + str + '</a>';
+    }
+    return span('string value', '"' + str + '"');
   }
 
   if ('number' == typeof obj) {
