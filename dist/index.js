@@ -52,9 +52,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	
+	var urlRegex = __webpack_require__(1);
+
 	/**
 	 * Expose `html()`.
 	 */
@@ -99,14 +101,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	function html(obj, indents) {
-	  var indents = indents || 1;
+	  indents = indents || 1;
 
 	  function indent() {
 	    return Array(indents).join('  ');
 	  }
 
 	  if ('string' == typeof obj) {
-	    return span('string value', '"' + escape(obj) + '"');
+	    var str = escape(obj);
+	    if (urlRegex().test(obj)) {
+	      str = '<a href="' + str + '">' + str + '</a>';
+	    }
+	    return span('string value', '"' + str + '"');
 	  }
 
 	  if ('number' == typeof obj) {
@@ -121,10 +127,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return span('null', 'null');
 	  }
 
+	  var buf;
+
 	  if (Array.isArray(obj)) {
 	    ++indents;
 
-	    var buf = '[\n' + obj.map(function(val){
+	    buf = '[\n' + obj.map(function(val){
 	      return indent() + html(val, indents);
 	    }).join(',\n');
 
@@ -133,7 +141,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return buf;
 	  }
 
-	  var buf = '{';
+	  buf = '{';
 	  var keys = Object.keys(obj);
 	  var len = keys.length;
 	  if (len) buf += '\n';
@@ -152,6 +160,60 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  return buf;
 	}
+
+
+/***/ },
+/* 1 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	var ipRegex = __webpack_require__(2);
+
+	module.exports = function (opts) {
+		opts = opts || {};
+
+		var protocol = '(?:(?:[a-z]+:)?//)';
+		var auth = '(?:\\S+(?::\\S*)?@)?';
+		var ip = ipRegex.v4().source;
+		var host = '(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)';
+		var domain = '(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*';
+		var tld = '(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))';
+		var port = '(?::\\d{2,5})?';
+		var path = '(?:[/?#][^\\s"]*)?';
+		var regex = [
+			'(?:' + protocol + '|www\\.)' + auth, '(?:localhost|' + ip + '|' + host + domain + tld + ')',
+			port, path
+		].join('');
+
+		return opts.exact ? new RegExp('(?:^' + regex + '$)', 'i') :
+							new RegExp(regex, 'ig');
+	};
+
+
+/***/ },
+/* 2 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	var v4 = '(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])(?:\\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])){3}';
+	var v6 = '(?:(?:[0-9a-fA-F:]){1,4}(?:(?::(?:[0-9a-fA-F]){1,4}|:)){2,7})+';
+
+	var ip = module.exports = function (opts) {
+		opts = opts || {};
+		return opts.exact ? new RegExp('(?:^' + v4 + '$)|(?:^' + v6 + '$)') :
+		                    new RegExp('(?:' + v4 + ')|(?:' + v6 + ')', 'g');
+	};
+
+	ip.v4 = function (opts) {
+		opts = opts || {};
+		return opts.exact ? new RegExp('^' + v4 + '$') : new RegExp(v4, 'g');
+	};
+
+	ip.v6 = function (opts) {
+		opts = opts || {};
+		return opts.exact ? new RegExp('^' + v6 + '$') : new RegExp(v6, 'g');
+	};
 
 
 /***/ }
