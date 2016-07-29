@@ -1,4 +1,6 @@
 
+var urlRegex = require('url-regex');
+
 /**
  * Expose `html()`.
  */
@@ -50,7 +52,6 @@ function html(obj, indents) {
   }
 
   if ('string' == typeof obj) {
-    var urlRegex = require('url-regex');
     var str = escape(obj);
     if (urlRegex().test(obj)) {
       str = '<a href="' + str + '">' + str + '</a>';
